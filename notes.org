@@ -1,0 +1,47 @@
+* Notes
+<2022-10-23 Sun 13:32>: I set this lab up with the following commands:
+#+begin_src bash
+bundle install
+rails db:migrate
+#+end_src
+
+Here are the related validations for the models that are required for this lab: [42%]
+- [X] 1. All authors have a name
+- [X] 2. No two authors have the same name
+- [X] 3. Author phone numbers are exactly ten digits
+- [ ] 4. All posts have a title
+- [ ] 5. Post content is at least 250 characters long
+- [ ] 6. Post summary is a maximum of 250 characters
+- [ ] 7. Post category is either Fiction or Non-Fiction. This step requires an inclusion validator, which was not outlined in the lesson. You'll need to refer to the Rails guideLinks to an external site. to look up how to use it.
+
+I modified the 'app/models/author.rb' Author model with the following validations that account for Validations 1 through 3 above:
+#+begin_src ruby
+class Author < ApplicationRecord
+    validates :name, presence: true, uniqueness: true
+    validates :phone_number, length: { is: 10 }
+end
+#+end_src
+
+I then modified the 'app/models/post.rb' Post model with the following validations that account for Validations 4 through 7 above:
+#+begin_src ruby
+class Post < ApplicationRecord
+    validates :title, presence: true
+    validates :content, length: { minimum: 250 }
+    validates :summary, length: { maximum: 250 }
+    validates :category, inclusion: { in: ["Fiction", "Non-Fiction"] }
+    validate :clickbait?
+
+    PATTERNS = [
+        /Won't believe/i,
+        /Secret/i,
+        /Top \d/i,
+        /Guess/i
+    ]
+
+    def clickbait?
+        if PATTERNS.none? { |pattern| pattern.match title }
+            errors.add(:title, "must be clickbait, don't proceed")
+        end
+    end
+end
+#+end_src
